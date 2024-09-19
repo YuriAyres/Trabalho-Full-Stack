@@ -11,7 +11,7 @@ from negacao import Negacoes
 GPIO.setmode(GPIO.BOARD)
 LED_VERDE = 8
 LED_VERMELHO = 10
-BUZZER = 12
+BUZZER = 38
 
 GPIO.setup(LED_VERDE, GPIO.OUT)
 GPIO.setup(LED_VERMELHO, GPIO.OUT)
@@ -54,17 +54,17 @@ def salvar_relatorio_csv():
         
         # Relatório para usuários autorizados (com acessos)
         for tag, tempos in tempo_entrada.items():
-            nome = autorizacoes.get(tag, "Desconhecido")
+            nome = autorizacoes._autorizados.get(tag, "Desconhecido")
             tempo_total = sum([saida - entrada for entrada, saida in tempos if saida is not None]) / 3600  # Em horas
-            writer.writerow([nome, f"{tempo_total:.2f}", tentativas_negadas.get(nome, 0), tentativas_invasao])
+            writer.writerow([nome, f"{tempo_total:.5f}","", ""])
 
         # Relatório de tentativas negadas
-        for tag, nome in negacoes.items():
-            if tag not in tempo_entrada:  # Usuários que nunca conseguiram entrar
-                writer.writerow([nome, "0.00", tentativas_negadas.get(nome, 0), tentativas_invasao])
+        for tag, nome in negacoes._negados.items():
+            if tag not in tempo_entrada and nome in tentativas_negadas:  # Usuários que nunca conseguiram entrar
+                writer.writerow([nome, "", tentativas_negadas.get(nome, 0), ""])
 
         # Relatório de tentativas de invasão (tags não reconhecidas)
-        writer.writerow(["Invasão Desconhecida", "N/A", "N/A", tentativas_invasao])
+        writer.writerow(["Invasão Desconhecida", "", "", tentativas_invasao])
 
 
 # Função para finalizar o programa
@@ -74,7 +74,7 @@ def finalizar_programa(signal, frame):
     for tag, tempos in tempo_entrada.items():
         nome = autorizacoes[tag]
         tempo_total = sum([saida - entrada for entrada, saida in tempos if saida is not None])
-        print(f"Colaborador {nome} ficou {tempo_total / 3600:.2f} horas na sala.")
+        print(f"Colaborador {nome} ficou {tempo_total / 3600:.5f} horas na sala.")
     
     print("\nTentativas de acesso negadas:")
     for nome, tentativas in tentativas_negadas.items():

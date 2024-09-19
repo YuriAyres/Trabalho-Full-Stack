@@ -51,11 +51,21 @@ def salvar_relatorio_csv():
     with open('relatorio_acessos.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["Colaborador", "Tempo Total (horas)", "Tentativas de Acesso Negadas", "Tentativas de Invasão"])
-
+        
+        # Relatório para usuários autorizados (com acessos)
         for tag, tempos in tempo_entrada.items():
-            nome = autorizacoes[tag]
+            nome = autorizacoes.get(tag, "Desconhecido")
             tempo_total = sum([saida - entrada for entrada, saida in tempos if saida is not None]) / 3600  # Em horas
             writer.writerow([nome, f"{tempo_total:.2f}", tentativas_negadas.get(nome, 0), tentativas_invasao])
+
+        # Relatório de tentativas negadas
+        for tag, nome in negacoes.items():
+            if tag not in tempo_entrada:  # Usuários que nunca conseguiram entrar
+                writer.writerow([nome, "0.00", tentativas_negadas.get(nome, 0), tentativas_invasao])
+
+        # Relatório de tentativas de invasão (tags não reconhecidas)
+        writer.writerow(["Invasão Desconhecida", "N/A", "N/A", tentativas_invasao])
+
 
 # Função para finalizar o programa
 def finalizar_programa(signal, frame):
